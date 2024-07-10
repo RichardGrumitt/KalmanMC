@@ -134,10 +134,6 @@ class FIStpCN:
             self.scaler.fit(x)
             u = self.train_flow(x, k2)
 
-            t_mu, t_cov, t_nu = fit_mvstud(u)
-            if ~jnp.isfinite(t_nu):
-                t_nu = 1e6
-
             logw = (beta - old_beta) * log_like
             logw = logw - logsumexp(logw)
             resamp_idx = systematic_resample(num_ens, jnp.exp(logw), random_key=k3)
@@ -163,10 +159,7 @@ class FIStpCN:
                               P=log_prior,
                               ensembles=ensembles,
                               iters=iters,
-                              beta=beta,
-                              mu=t_mu,
-                              cov=t_cov,
-                              nu=t_nu)
+                              beta=beta)
 
             option_dict = dict(target_accept=target_accept,
                                nmax=nmax,
@@ -186,7 +179,7 @@ class FIStpCN:
             ensembles = pcn_result['ensembles']
             iters = pcn_result['iters']
             
-            print(f'beta: {beta}, pCN steps: {pcn_steps}, pCN acceptance rate: {accept}, efficiency: {sigma}')
+            print(f'beta: {beta}, pCN steps: {pcn_steps}, pCN acceptance rate: {accept}, sigma: {sigma}')
 
         print(f'Total calls: {total_calls}')
 
@@ -211,9 +204,6 @@ class FIStpCN:
         L = jnp.copy(state_dict.get('L'))
         P = jnp.copy(state_dict.get('P'))
         beta = state_dict.get('beta')
-        mu = state_dict.get('mu')
-        cov = state_dict.get('cov')
-        nu = state_dict.get('nu')
 
         key = option_dict.get('key')
         ensembles = state_dict.get('ensembles')
@@ -231,6 +221,10 @@ class FIStpCN:
 
         # Get number of particles and parameters/dimensions
         n_walkers, n_dim = x.shape
+        
+        mu, cov, nu = fit_mvstud(theta)
+        if ~jnp.isfinite(nu):
+            nu = 1e6
 
         inv_cov = jnp.linalg.inv(cov)
         chol_cov = jnp.linalg.cholesky(cov)

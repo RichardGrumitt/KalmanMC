@@ -90,11 +90,6 @@ class IStpCN:
                                          scale=self.scale,
                                          diagonal=self.diagonal)
             self.scaler.fit(x)
-            u = self.scaler.forward(x)
-
-            t_mu, t_cov, t_nu = fit_mvstud(u)
-            if ~jnp.isfinite(t_nu):
-                t_nu = 1e6
 
             logw = (beta - old_beta) * log_like
             logw = logw - logsumexp(logw)
@@ -106,10 +101,6 @@ class IStpCN:
 
             u = self.scaler.forward(x)
             J = self.scaler.inverse(u)[1]
-            
-            t_mu, t_cov, t_nu = fit_mvstud(u)
-            if ~jnp.isfinite(t_nu):
-                t_nu = 1e6
 
             log_like = self.log_like_fn(x)
             log_prior = self.log_prior_fn(x)
@@ -121,10 +112,7 @@ class IStpCN:
                               P=log_prior,
                               ensembles=ensembles,
                               iters=iters,
-                              beta=beta,
-                              mu=t_mu,
-                              cov=t_cov,
-                              nu=t_nu)
+                              beta=beta)
 
             option_dict = dict(target_accept=target_accept,
                                nmax=nmax,
@@ -144,7 +132,7 @@ class IStpCN:
             ensembles = pcn_result['ensembles']
             iters = pcn_result['iters']
             
-            print(f'beta: {beta}, pCN steps: {pcn_steps}, pCN acceptance rate: {accept}, efficiency: {sigma}')
+            print(f'beta: {beta}, pCN steps: {pcn_steps}, pCN acceptance rate: {accept}, sigma: {sigma}')
 
         print(f'Total calls: {total_calls}')
 
@@ -171,9 +159,6 @@ class IStpCN:
         ensembles = state_dict.get('ensembles')
         iters = state_dict.get('iters')
         gamma_key, norm_key, unif_key = jax.random.split(key, 3)
-        mu = state_dict.get('mu')
-        cov = state_dict.get('cov')
-        nu = state_dict.get('nu')
         
         # Get MCMC options
         n_max = option_dict.get('nmax')
@@ -187,6 +172,10 @@ class IStpCN:
         # Get number of particles and parameters/dimensions
         n_walkers, n_dim = x.shape
 
+        mu, cov, nu = fit_mvstud(u)
+        if ~jnp.isfinite(nu):
+            nu = 1e6
+        
         inv_cov = jnp.linalg.inv(cov)
         chol_cov = jnp.linalg.cholesky(cov)
 
