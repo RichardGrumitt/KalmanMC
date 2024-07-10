@@ -4,7 +4,7 @@ KalmanMC provides Jax implementations of Sequential Kalman Monte Carlo (SKMC) sa
 
 SKMC replaces the importance resampling step of standard Sequential Monte Carlo (SMC) with an Ensemble Kalman Inversion (EKI) update, before performing MCMC updates at each temperature level. For the MCMC updates we use the t-preconditioned Crank-Nicholson (tpCN) algorithm for efficient gradient-free sampling.   
 
-The MCMC steps performed corrects for the Gaussianity and model linearity assumptions of EKI, whilst accelerating the convergence of SMC. We also implement normalizing flow (NF) preconditioning, which can further improve performance on targets with nonlinear curvature in the target distributions.
+The MCMC steps correct for the Gaussianity and model linearity assumptions of EKI, whilst accelerating the convergence of SMC. We also implement normalizing flow (NF) preconditioning, which can further improve performance on targets with nonlinear curvature.
 
 The algorithms implemented in this repo are:
 
