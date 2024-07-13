@@ -16,3 +16,5 @@ The algorithms implemented in this repo are:
 6. **EKI**: temperature annealed EKI (eki.py).
 
 For examples demonstrating the use of these algorithms on benchmark inverse problems see the `notebooks` directory.
+
+Please note that this repo will be undergoing extensive edits in the near future.
